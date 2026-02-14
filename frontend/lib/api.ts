@@ -25,9 +25,28 @@ export const api = {
     return data
   },
 
+  signup: async (email: string, password: string, name: string) => {
+    const { data } = await apiClient.post('/auth/signup', { email, password, name })
+    return data
+  },
+
   demoLogin: async () => {
     const { data } = await apiClient.post('/auth/demo')
     return data
+  },
+
+  logout: () => {
+    const isDemo = localStorage.getItem('isDemo')
+    
+    // Clear all stored data
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    localStorage.removeItem('isDemo')
+    
+    if (isDemo === 'true') {
+      console.log('Demo session cleared')
+      // Demo data automatically cleared since we're using the same demo account
+    }
   },
 
   // Onboarding

@@ -323,3 +323,75 @@ export async function getRecentSearches(req: Request, res: Response, next: NextF
     next(error)
   }
 }
+// Add this function
+export async function signup(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, password, name } = req.body
+    
+    // Check if user exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() })
+    if (existingUser) {
+      return res.status(409).json({ error: 'User already exists' })
+    }
+    
+    // Create new user
+    const hashedPassword = await hashPassword(password)
+    const user = await User.create({
+      email: email.toLowerCase(),
+      passwordHash: hashedPassword,
+      name: name || 'User'
+    })
+    
+    const token = generateJWT(user._id.toString(), user.email)
+    
+    res.json({
+      token,
+      user: { id: user._id, email: user.email, name: user.name },
+      onboardingCompleted: false
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+// ADD THIS TO backend/src/controllers.ts
+
+// Add this function with other auth controllers
+export async function signup(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, password, name } = req.body
+    
+    // Validate input
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, password, and name are required' })
+    }
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() })
+    if (existingUser) {
+      return res.status(409).json({ error: 'User with this email already exists' })
+    }
+    
+    // Create new user
+    const hashedPassword = await hashPassword(password)
+    const user = await User.create({
+      email: email.toLowerCase(),
+      passwordHash: hashedPassword,
+      name: name
+    })
+    
+    // Generate JWT token
+    const token = generateJWT(user._id.toString(), user.email)
+    
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name
+      },
+      onboardingCompleted: false // New users need to complete onboarding
+    })
+  } catch (error) {
+    next(error)
+  }
+}
